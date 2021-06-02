@@ -74,3 +74,12 @@
     - Parâmetros
         - nome da estratégia
         - objeto com modificadores
+
+## Criando middlewares personalizados com a regra de negócio
+
+- Implementar uma nova função de callback no terceiro parâmetro de passport.authenticate
+    - Parâmetros
+        - erro
+        - requisição
+        - objeto com modificadores
+- Encapsular o passport.authenticate dentro de um novo middleware para ter acesso aos seus atributos
