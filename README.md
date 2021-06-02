@@ -81,5 +81,5 @@
     - Parâmetros
         - erro
         - requisição
-        - objeto com modificadores
+        - objeto com informações
 - Encapsular o passport.authenticate dentro de um novo middleware para ter acesso aos seus atributos
