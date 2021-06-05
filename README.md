@@ -1,6 +1,11 @@
 # Blog do código
 > Um blog simples em Node.js
 
+# Documentações
+
+Json Web Token
+https://www.npmjs.com/package/jsonwebtoken
+
 # Notas
 
 ## Função de espalhaento ou Hashing
@@ -83,3 +88,39 @@
         - requisição
         - objeto com informações
 - Encapsular o passport.authenticate dentro de um novo middleware para ter acesso aos seus atributos
+
+## Inserindo tempo de expiração no token
+
+- Incluir um terceriro parâmetro no método jwt.sign que define o tempo de validade do token
+
+~~~javascript
+jwt.sign(payload, process.env.CHAVE_JWT, {expiresIn: '15m'})
+~~~
+
+- Incluir o tratamento do erro no middleware de autenticação.
+
+~~~javascript
+if (erro && erro.name === 'TokenExpiredError') {
+    return res.status(401).json({
+        erro: erro.message,
+        expiradoEm: erro.expiredAt
+    })
+}
+~~~
+
+## BLACKLIST Implementando lista de tokens inválidos por logout 
+
+- Instalar o módulo do Redis
+- Criar o arquivo blacklist.js na pasta do redis
+- Importar o módulo redis e criar um Client
+
+ ~~~javascript
+ const redis = require('redis')
+module.exports = redis.createClient({prefix: 'blacklist:'})
+~~~
+
+- Instânciar o redis no server.js
+
+ ~~~javascript
+require('./redis/blacklist')
+~~~
