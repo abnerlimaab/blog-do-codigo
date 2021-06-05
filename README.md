@@ -124,3 +124,25 @@ module.exports = redis.createClient({prefix: 'blacklist:'})
  ~~~javascript
 require('./redis/blacklist')
 ~~~
+
+## Manipulando a blacklist
+
+- Criar o arquivo manipula-blacklist.js
+- importar a blacklist
+- exportar as funções
+
+ ~~~javascript
+module.exports = {
+    adiciona: async token => {
+        const dataExpiracao = jwt.decode(token).exp
+        const tokenHash = geraTokenHash(token)
+        await blacklist.set(tokenHash, '')
+        blacklist.expireat(tokenHash, dataExpiracao)
+    },
+    contemToken: async token => {
+        const tokenHash = geraTokenHash(token)
+        const resultado = await blacklist.exists(tokenHash)
+        return resultado === 1
+    }
+}
+~~~
