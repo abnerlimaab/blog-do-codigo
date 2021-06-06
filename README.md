@@ -146,3 +146,74 @@ module.exports = {
     }
 }
 ~~~
+
+## Usando blacklist no logout
+
+- Criamos o req.token que armazenará o token na requisição para ser usado nos próximos middlewares
+
+~~~javascript
+bearer: (req, res, next) => {
+        passport.authenticate(
+            'bearer',
+            {session: false},
+            (erro, usuario, info) => {
+                ///...
+                req.token = info.token
+                ///...
+                return next()
+            }
+        ) (req, res, next)
+    }
+~~~
+
+- A função logout recolhe o token presente na requisição, e o adiciona na blacklist
+
+~~~javascript
+  logout: async (req, res) => {
+    try {
+      const token = req.token
+      await blacklist.adiciona(token)
+      res.status(204).send()
+    } catch (erro) {
+      res.status(500).json({erro: erro.message})
+    }
+  },
+~~~
+
+- Criamos uma função que através do método contemToken já implementado, verifica se o token da requisição está na blacklist. Caso esteja, será passado um erro.
+
+~~~javascript
+async function verificaTokenNaBlacklist(token) {
+    const tokenNaBlacklist = await blacklist.contemToken(token)
+    if (tokenNaBlacklist) {
+        throw new jwt.JsonWebTokenError('Token inválido por logout')
+    }
+}
+~~~
+
+- Então atualizamos a implementação da Bearer Strategy chamando a função verificaTokenNaBlacklist para verificar se o token está expirado. Caso ainda esteja válido, o token será encaminhado para o próximo middleware
+
+~~~javascript
+passport.use(
+    new bearerStrategy(
+        async (token, done) => {
+            try {
+                await verificaTokenNaBlacklist(token)
+                const payload = jwt.verify(token, process.env.CHAVE_JWT)
+                const usuario = await Usuario.buscaPorId(payload.id)
+                done(null, usuario, {token: token})
+            } catch (erro) {
+                done(erro)
+            }
+        }
+    )
+)
+~~~
+
+- Por fim, incluimos logout na rota
+
+~~~javascript
+app
+    .route('/usuario/logout')
+    .get(middlewaresAutenticacao.bearer, usuariosControlador.logout)
+~~~
